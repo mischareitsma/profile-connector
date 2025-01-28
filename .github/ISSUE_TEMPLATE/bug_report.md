@@ -24,9 +24,9 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - vscode version: [e.g. 1.72.2]
- - vscode-psl version[e.g. 1.12.1]
+ - OS: [e.g. Windows]
+ - profile-connector: [e.g. 1.2.3]
+ - node version: [e.g. 21.4.0]
 
 **Additional context**
 Add any other context about the problem here.
