@@ -3,17 +3,31 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "moduleResolution": "node",
-        "module": "commonjs",
-        "target": "es6",
-        "outDir": "out",
+        "module": "ESNext",
+        "target": "ESNext",
         "lib": [
-            "es6"
+            "ESNext"
         ],
         "inlineSourceMap": true,
-        "rootDir": ".",
-        "skipLibCheck": true
+        "incremental": true,
+        "composite": true,
+        "rootDir": "src/",
+        "outDir": "dist/",
+        "alwaysStrict": true,
+        "noImplicitThis": true,
+        "forceConsistentCasingInFileNames": true,
+        "newLine": "lf",
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitOverride": true,
+        "declaration": true
     },
     "exclude": [
-        "node_modules"
-    ]
+        "node_modules",
+        "out",
+        "dist",
+        "lib",
+        "tmp",
+        "build-package-json.js",
+    ],
 }

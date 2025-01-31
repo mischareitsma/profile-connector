@@ -1,7 +1,16 @@
+# Dependencies directory
 node_modules/
+
+# Potential output directories
 out/
 dist/
 lib/
+
+# Editors
+.idea/
+
+# TypeScript stuff
+*.tsbuildinfo
 
 # Common file extensions
 *.jrnl
