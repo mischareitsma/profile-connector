@@ -7,8 +7,11 @@
   "types": "./out/index.d.ts",
   "scripts": {
     "clean": "rimraf out",
+    "precompile": "npm run clean",
     "compile": "tsc -p tsconfig.json",
-    "lint": "tslint -c tslint.json --project .",
+    "prebuild": "npm run clean",
+    "build": "tsc -p tsconfig.json",
+    "lint": "npx eslint .",
     "watch": "npm run compile -- -watch",
     "test": "echo \"No tests implemented.\""
   },
@@ -17,8 +20,11 @@
     "url": "https://github.com/ing-bank/vscode-psl"
   },
   "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@stylistic/eslint-plugin": "^3.0.1",
     "@types/node": "^20.11.1",
     "rimraf": "^5.0.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "typescript-eslint": "^8.22.0"
   }
 }
