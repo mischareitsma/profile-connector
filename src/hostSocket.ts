@@ -21,7 +21,7 @@ export default class HostSocket {
 		});
 	}
 
-	closeConnection() {
+	closeConnection(): void {
 		this.socket.removeAllListeners();
 		this.socket.destroy();
 	}

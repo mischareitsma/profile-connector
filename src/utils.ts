@@ -33,7 +33,7 @@ export const extensionToDescription: { [key: string]: string } = {
 	"TRIG": "Trigger",
 };
 
-export function v2lvFormat(messageValue: string[]) {
+export function v2lvFormat(messageValue: string[]): string {
 	let lvMessage = "";
 	if (messageValue.length !== 0) {
 		messageValue.forEach(messageString => {
@@ -309,7 +309,7 @@ export function getObjectType(fileName: string): FileDetails {
 	};
 }
 
-function getFileDetails(fileExtension: string) {
+function getFileDetails(fileExtension: string): string {
 	if (fileExtension in extensionToDescription) return extensionToDescription[fileExtension];
 
 	throw new Error(`Invalid file extension: ${fileExtension}`);

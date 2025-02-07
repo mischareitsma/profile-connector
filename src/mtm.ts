@@ -25,10 +25,15 @@ export class MtmConnection {
 
 	constructor(
 		private serverType: string = "SCA$IBS",
-		private encoding: BufferEncoding = "utf8")
-	{}
+		private encoding: BufferEncoding = "utf8"
+	) {}
 
-	async open(host: string, port: number, profileUsername: string, profilePassword: string) {
+	async open(
+		host: string,
+		port: number,
+		profileUsername: string,
+		profilePassword: string
+	): Promise<void> {
 		await this.socket.connect(port, host);
 		const prepareString = utils.connectionObject(profileUsername, profilePassword);
 		const returnArray = await this.execute(
@@ -38,7 +43,7 @@ export class MtmConnection {
 		this.token = returnArray;
 	}
 
-	async send(fileName: string) {
+	async send(fileName: string): Promise<string> {
 		try {
 			const codeToken = await this._send(fileName);
 			const returnString = await this.saveInProfile(fileName, codeToken);
@@ -53,7 +58,7 @@ export class MtmConnection {
 		}
 	}
 
-	async testCompile(fileName: string) {
+	async testCompile(fileName: string): Promise<string> {
 		try {
 			const codeToken = await this._send(fileName);
 			return await this._testCompile(fileName, codeToken);
@@ -64,7 +69,7 @@ export class MtmConnection {
 		}
 	}
 
-	async get(fileName: string) {
+	async get(fileName: string): Promise<string> {
 		try {
 			return await this._get(fileName);
 		}
@@ -74,7 +79,7 @@ export class MtmConnection {
 		}
 	}
 
-	async compileAndLink(fileName: string) {
+	async compileAndLink(fileName: string): Promise<string> {
 		try {
 			return await this._compileAndLink(fileName);
 		}
@@ -84,7 +89,7 @@ export class MtmConnection {
 		}
 	}
 
-	async runPsl(fileName: string) {
+	async runPsl(fileName: string): Promise<string> {
 		try {
 			const codeToken = await this._send(fileName);
 			return await this._runPsl(codeToken);
@@ -95,7 +100,7 @@ export class MtmConnection {
 		}
 	}
 
-	async runCustom(fileName: string, mrpcID: string, request: string) {
+	async runCustom(fileName: string, mrpcID: string, request: string): Promise<string> {
 		try {
 			const codeToken = await this._send(fileName);
 			return await this._runCustom(codeToken, mrpcID, request);
@@ -106,12 +111,12 @@ export class MtmConnection {
 		}
 	}
 
-	async close() {
+	close(): boolean {
 		this.socket.closeConnection();
 		return this.socket.socket.destroyed;
 	}
 
-	async batchcomp(fileName: string) {
+	async batchcomp(fileName: string): Promise<string> {
 		try {
 			return await this.batchCompileAndLink(fileName);
 		}
@@ -121,7 +126,7 @@ export class MtmConnection {
 		}
 	}
 
-	async getTable(fileName: string) {
+	async getTable(fileName: string): Promise<string> {
 		try {
 			this.isSql = false;
 			return await this._getTable(fileName);
@@ -132,7 +137,7 @@ export class MtmConnection {
 		}
 	}
 
-	async sqlQuery(query: string) {
+	async sqlQuery(query: string): Promise<string> {
 		try {
 			this.isSql = true;
 			return await this._sqlQuery(query);
@@ -143,7 +148,7 @@ export class MtmConnection {
 		}
 	}
 
-	async getPSLClasses() {
+	async getPSLClasses(): Promise<string> {
 		try {
 			return await this._getPslClasses();
 		}
@@ -153,7 +158,7 @@ export class MtmConnection {
 		}
 	}
 
-	private async _send(filename: string) {
+	private async _send(filename: string): Promise<string> {
 		let returnString: string;
 		
 		const fileString: string = (
@@ -184,7 +189,7 @@ export class MtmConnection {
 		);
 	}
 
-	private async saveInProfile(fileName: string, codeToken: string) {
+	private async saveInProfile(fileName: string, codeToken: string): Promise<string> {
 		const fileDetails = utils.getObjectType(fileName);
 		const prepareString = utils.saveObject(
 			fileDetails.fileBaseName,
@@ -197,7 +202,7 @@ export class MtmConnection {
 		);
 	}
 
-	private async _testCompile(fileName: string, codeToken: string) {
+	private async _testCompile(fileName: string, codeToken: string): Promise<string> {
 		const fileDetails = utils.getObjectType(fileName);
 		const prepareString = utils.testCompileObject(fileDetails.fileBaseName, codeToken);
 		return await this.execute(
@@ -206,7 +211,7 @@ export class MtmConnection {
 		);
 	}
 
-	private async _get(fileName: string) {
+	private async _get(fileName: string): Promise<string> {
 		const fileDetails = utils.getObjectType(fileName);
 		let prepareString = utils.initObject(fileDetails.fileId, fileDetails.fileName);
 		
@@ -232,7 +237,7 @@ export class MtmConnection {
 		return returnString;
 	}
 
-	private async _compileAndLink(fileName: string) {
+	private async _compileAndLink(fileName: string): Promise<string> {
 		const fileDetails = utils.getObjectType(fileName);
 		let prepareString = utils.preCompileObject(fileDetails.fileBaseName);
 		
@@ -248,7 +253,7 @@ export class MtmConnection {
 		);
 	}
 
-	private async _runPsl(codeToken: string) {
+	private async _runPsl(codeToken: string): Promise<string> {
 		const prepareString = utils.pslRunObject(codeToken);
 		return await this.execute(
 			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
@@ -256,7 +261,11 @@ export class MtmConnection {
 		);
 	}
 
-	private async _runCustom(codeToken: string, mrpcID: string, request: string) {
+	private async _runCustom(
+		codeToken: string,
+		mrpcID: string,
+		request: string
+	): Promise<string> {
 		const prepareString = utils.customRunObject(request, codeToken);
 		return await this.execute(
 			{ mrpcID, serviceClass: ServiceClass.MRPC },
@@ -265,7 +274,7 @@ export class MtmConnection {
 	}
 
 	// Batch complie is not working since 81 is not fully exposed from profile
-	private async batchCompileAndLink(fileName: string) {
+	private async batchCompileAndLink(fileName: string): Promise<string> {
 		const fileDetails = utils.getObjectType(fileName);
 		const dbtblTableName = utils.getDbtblInfo(fileDetails.fileId);
 		
@@ -280,7 +289,7 @@ export class MtmConnection {
 		);
 	}
 
-	private async _getTable(fileName: string) {
+	private async _getTable(fileName: string): Promise<string> {
 		let returnString: string;
 		const fileDetails = utils.getObjectType(fileName);
 		
@@ -308,7 +317,7 @@ export class MtmConnection {
 		return returnString;
 	}
 
-	private async _sqlQuery(selectQuery: string) {
+	private async _sqlQuery(selectQuery: string): Promise<string> {
 		selectQuery = selectQuery.toUpperCase();
 		if (!selectQuery.startsWith("SELECT")) {
 			throw new Error("Not a select query");
@@ -320,13 +329,13 @@ export class MtmConnection {
 		return returnString;
 	}
 
-	private async openSqlCursor(cursorNumber: string, selectQuery: string) {
+	private async openSqlCursor(cursorNumber: string, selectQuery: string): Promise<string> {
 		const openCursor = "OPEN CURSOR " + cursorNumber + " AS ";
 		const prepareString = utils.sqlObject(openCursor + selectQuery, "");
 		return await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
 	}
 
-	private async fetchSqlCursor(cursorNumber: string) {
+	private async fetchSqlCursor(cursorNumber: string): Promise<string> {
 		const fetchCursor = "FETCH " + cursorNumber;
 		const rows = "ROWS=" + this.maxRow;
 		const prepareString = utils.sqlObject(fetchCursor, rows);
@@ -356,13 +365,13 @@ export class MtmConnection {
 		return returnString;
 	}
 
-	private async closeSqlCursor(cursorNumber: string) {
+	private async closeSqlCursor(cursorNumber: string): Promise<string> {
 		const closeCursor = "CLOSE " + cursorNumber;
 		const prepareString = utils.sqlObject(closeCursor, "");
 		return await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
 	}
 
-	private async _getPslClasses() {
+	private async _getPslClasses(): Promise<string> {
 		const prepareString = utils.getPslCls();
 		return await this.execute(
 			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
