@@ -1,6 +1,6 @@
-import HostSocket from './hostSocket';
-import * as utils from './utils';
-import * as fs from 'fs';
+import HostSocket from "./hostSocket";
+import * as utils from "./utils";
+import * as fs from "fs";
 
 enum ServiceClass {
 	CONNECTION = 0,
@@ -15,31 +15,37 @@ interface ServiceDetail {
 
 export class MtmConnection {
 
-	private socket: HostSocket = new HostSocket()
+	private socket: HostSocket = new HostSocket();
 	private messageByte: string = String.fromCharCode(28);
-	private token: string = '';
+	private token: string = "";
 	private messageId: number = 0;
 	private maxRow: number = 30;
 	private isSql: boolean = false;
 	private recordCount: number = 0;
 
-	constructor(private serverType: string = 'SCA$IBS', private encoding: BufferEncoding = 'utf8') { }
+	constructor(
+		private serverType: string = "SCA$IBS",
+		private encoding: BufferEncoding = "utf8")
+	{}
 
 	async open(host: string, port: number, profileUsername: string, profilePassword: string) {
 		await this.socket.connect(port, host);
-		let prepareString = utils.connectionObject(profileUsername, profilePassword);
-		let returnArray = await this.execute({ serviceClass: ServiceClass.CONNECTION }, prepareString);
+		const prepareString = utils.connectionObject(profileUsername, profilePassword);
+		const returnArray = await this.execute(
+			{ serviceClass: ServiceClass.CONNECTION },
+			prepareString
+		);
 		this.token = returnArray;
 	}
 
 	async send(fileName: string) {
 		try {
-			let codeToken = await this._send(fileName)
-			let returnString = await this.saveInProfile(fileName, codeToken)
-			if (returnString !== '1') {
-				throw new Error(returnString.split('\r\n')[1]);
+			const codeToken = await this._send(fileName);
+			const returnString = await this.saveInProfile(fileName, codeToken);
+			if (returnString !== "1") {
+				throw new Error(returnString.split("\r\n")[1]);
 			}
-			return returnString
+			return returnString;
 		}
 		catch (err) {
 			this.close();
@@ -49,9 +55,8 @@ export class MtmConnection {
 
 	async testCompile(fileName: string) {
 		try {
-			let codeToken = await this._send(fileName)
-			let returnString = await this._testCompile(fileName, codeToken)
-			return returnString
+			const codeToken = await this._send(fileName);
+			return await this._testCompile(fileName, codeToken);
 		}
 		catch (err) {
 			this.close();
@@ -61,8 +66,7 @@ export class MtmConnection {
 
 	async get(fileName: string) {
 		try {
-			let returnString = await this._get(fileName)
-			return returnString
+			return await this._get(fileName);
 		}
 		catch (err) {
 			this.close();
@@ -72,8 +76,7 @@ export class MtmConnection {
 
 	async compileAndLink(fileName: string) {
 		try {
-			let returnString = await this._compileAndLink(fileName)
-			return returnString
+			return await this._compileAndLink(fileName);
 		}
 		catch (err) {
 			this.close();
@@ -83,9 +86,8 @@ export class MtmConnection {
 
 	async runPsl(fileName: string) {
 		try {
-			let codeToken = await this._send(fileName)
-			let returnString = await this._runPsl(codeToken)
-			return returnString
+			const codeToken = await this._send(fileName);
+			return await this._runPsl(codeToken);
 		}
 		catch (err) {
 			this.close();
@@ -96,8 +98,7 @@ export class MtmConnection {
 	async runCustom(fileName: string, mrpcID: string, request: string) {
 		try {
 			const codeToken = await this._send(fileName);
-			const returnString = await this._runCustom(codeToken, mrpcID, request);
-			return returnString;
+			return await this._runCustom(codeToken, mrpcID, request);
 		}
 		catch (err) {
 			this.close();
@@ -112,8 +113,7 @@ export class MtmConnection {
 
 	async batchcomp(fileName: string) {
 		try {
-			let returnString = await this.batchCompileAndLink(fileName)
-			return returnString
+			return await this.batchCompileAndLink(fileName);
 		}
 		catch (err) {
 			this.close();
@@ -123,9 +123,8 @@ export class MtmConnection {
 
 	async getTable(fileName: string) {
 		try {
-			this.isSql = false
-			let returnString = await this._getTable(fileName)
-			return returnString
+			this.isSql = false;
+			return await this._getTable(fileName);
 		}
 		catch (err) {
 			this.close();
@@ -135,9 +134,8 @@ export class MtmConnection {
 
 	async sqlQuery(query: string) {
 		try {
-			this.isSql = true
-			let returnString = await this._sqlQuery(query)
-			return returnString
+			this.isSql = true;
+			return await this._sqlQuery(query);
 		}
 		catch (err) {
 			this.close();
@@ -147,8 +145,7 @@ export class MtmConnection {
 
 	async getPSLClasses() {
 		try {
-			let returnString = await this._getPslClasses();
-			return returnString;
+			return await this._getPslClasses();
 		}
 		catch (err) {
 			this.close();
@@ -158,162 +155,219 @@ export class MtmConnection {
 
 	private async _send(filename: string) {
 		let returnString: string;
-		let fileString: string = (await readFileAsync(filename, {encoding: this.encoding})).toString(this.encoding);
-		let fileContentLength: number = fileString.length;
-		let totalLoop: number = Math.ceil(fileContentLength / 1024);
-		let codeToken: string = '';
+		
+		const fileString: string = (
+			await readFileAsync(filename, {encoding: this.encoding})
+		).toString(this.encoding);
+		
+		const fileContentLength: number = fileString.length;
+		const totalLoop: number = Math.ceil(fileContentLength / 1024);
+		let codeToken: string = "";
 		for (let i = 0; i < totalLoop; i++) {
-			let partialString: string = fileString.slice(i * 1024, (i * 1024) + 1024);
-			let withPipe: string = '';
+			// TODO: (Mischa Reitsma) This could be stretched a bit. Message can grow to max 1MB (prefeably a bit less), but 2048 bytes is nothing.
+			const partialString: string = fileString.slice(i * 1024, (i + 1) * 1024);
+			let withPipe: string = "";
 			for (const char of partialString) {
-				withPipe += char.charCodeAt(0) + '|';
+				withPipe += char.charCodeAt(0) + "|";
 			}
-			let prepareString: string = utils.initCodeObject(withPipe, codeToken)
-			returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString)
+			const prepareString: string = utils.initCodeObject(withPipe, codeToken);
+			returnString = await this.execute(
+				{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+				prepareString
+			);
 			codeToken = returnString;
 		}
-		let prepareString: string = utils.initCodeObject('', codeToken)
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString)
-		return returnString;
+		const prepareString: string = utils.initCodeObject("", codeToken);
+		return await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	private async saveInProfile(fileName: string, codeToken: string) {
-		let returnString: string;
-		let fileDetails = utils.getObjectType(fileName);
-		let prepareString = utils.saveObject(fileDetails.fileBaseName, codeToken, utils.getUserName())
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		return returnString
+		const fileDetails = utils.getObjectType(fileName);
+		const prepareString = utils.saveObject(
+			fileDetails.fileBaseName,
+			codeToken,
+			utils.getUserName()
+		);
+		return await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	private async _testCompile(fileName: string, codeToken: string) {
-		let returnString: string;
-		let fileDetails = utils.getObjectType(fileName);
-		let prepareString = utils.testCompileObject(fileDetails.fileBaseName, codeToken)
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		return returnString
+		const fileDetails = utils.getObjectType(fileName);
+		const prepareString = utils.testCompileObject(fileDetails.fileBaseName, codeToken);
+		return await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	private async _get(fileName: string) {
-		let returnString: string;
-		let fileDetails = utils.getObjectType(fileName);
-		let prepareString = utils.initObject(fileDetails.fileId, fileDetails.fileName)
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		let codeToken = returnString.split('\r\n')[1];
-		let hasMore = '1'
-		returnString = ''
-		while (hasMore === '1') {
-			prepareString = utils.retObject(codeToken)
-			let nextReturnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
+		const fileDetails = utils.getObjectType(fileName);
+		let prepareString = utils.initObject(fileDetails.fileId, fileDetails.fileName);
+		
+		let returnString: string = await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
+		
+		const codeToken = returnString.split("\r\n")[1];
+		let hasMore = "1";
+		returnString = "";
+		while (hasMore === "1") {
+			prepareString = utils.retObject(codeToken);
+			const nextReturnString = await this.execute(
+				{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+				prepareString
+			);
 			hasMore = nextReturnString.substr(0, 1);
-			returnString = returnString + nextReturnString.substr(1, nextReturnString.length);
+
+			returnString = returnString +
+				nextReturnString.substr(1, nextReturnString.length);
 		}
-		return returnString
+		return returnString;
 	}
 
 	private async _compileAndLink(fileName: string) {
-		let returnString: string;
-		let fileDetails = utils.getObjectType(fileName);
-		let prepareString = utils.preCompileObject(fileDetails.fileBaseName)
-		let codeToken = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		prepareString = utils.compileObject(codeToken)
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		return returnString;
+		const fileDetails = utils.getObjectType(fileName);
+		let prepareString = utils.preCompileObject(fileDetails.fileBaseName);
+		
+		const codeToken = await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
+		
+		prepareString = utils.compileObject(codeToken);
+		return await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	private async _runPsl(codeToken: string) {
-		let returnString: string;
-		let prepareString = utils.pslRunObject(codeToken)
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		return returnString;
+		const prepareString = utils.pslRunObject(codeToken);
+		return await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	private async _runCustom(codeToken: string, mrpcID: string, request: string) {
-		let returnString: string;
-		let prepareString = utils.customRunObject(request, codeToken);
-		returnString = await this.execute({ mrpcID, serviceClass: ServiceClass.MRPC }, prepareString);
-		return returnString;
+		const prepareString = utils.customRunObject(request, codeToken);
+		return await this.execute(
+			{ mrpcID, serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	// Batch complie is not working since 81 is not fully exposed from profile
 	private async batchCompileAndLink(fileName: string) {
-		let returnString: string;
-		let fileDetails = utils.getObjectType(fileName);
-		let dbtblTableName = utils.getDbtblInfo(fileDetails.fileId);
-		let prepareString = utils.batchCompileObject(dbtblTableName, fileDetails.fileName)
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		return returnString;
+		const fileDetails = utils.getObjectType(fileName);
+		const dbtblTableName = utils.getDbtblInfo(fileDetails.fileId);
+		
+		const prepareString = utils.batchCompileObject(
+			dbtblTableName,
+			fileDetails.fileName
+		);
+		
+		return await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	private async _getTable(fileName: string) {
 		let returnString: string;
-		let columnList: string[];
-		let fileDetails = utils.getObjectType(fileName);
-		let tableReturnString = fileDetails.fileBaseName + String.fromCharCode(1) + await this._get(fileName)
-		let selectStatement = `SELECT COUNT(DI) FROM DBTBL1D WHERE FID='${fileDetails.fileName}' `;
-		this.recordCount = Number(await this._sqlQuery(selectStatement))
+		const fileDetails = utils.getObjectType(fileName);
+		
+		const tableReturnString = (
+			fileDetails.fileBaseName +
+			String.fromCharCode(1) +
+			await this._get(fileName)
+		);
+
+		let selectStatement =
+			`SELECT COUNT(DI) FROM DBTBL1D WHERE FID='${fileDetails.fileName}'`;
+
+		this.recordCount = Number(await this._sqlQuery(selectStatement));
 		selectStatement = `SELECT DI FROM DBTBL1D WHERE FID='${fileDetails.fileName}'`;
-		returnString = await this._sqlQuery(selectStatement)
-		columnList = returnString.split('\r\n');
-		returnString = tableReturnString
+		returnString = await this._sqlQuery(selectStatement);
+		const columnList: string[] = returnString.split("\r\n");
+		returnString = tableReturnString;
 		for (let i = 0; i < columnList.length; i++) {
-			fileName = fileDetails.fileName + '-' + columnList[i] + '.COL'
-			returnString = returnString + String.fromCharCode(0) + fileName + String.fromCharCode(1) + await this._get(fileName)
+			fileName = fileDetails.fileName + "-" + columnList[i] + ".COL";
+			returnString = (
+				returnString + String.fromCharCode(0) + fileName +
+				String.fromCharCode(1) + await this._get(fileName)
+			);
 		}
 		return returnString;
 	}
 
 	private async _sqlQuery(selectQuery: string) {
-		selectQuery = selectQuery.toUpperCase()
-		if (!selectQuery.startsWith('SELECT')) {
-			throw new Error('Not a select query');
+		selectQuery = selectQuery.toUpperCase();
+		if (!selectQuery.startsWith("SELECT")) {
+			throw new Error("Not a select query");
 		}
-		let cursorNumber = new Date().getTime().toString()
-		let returnString = await this.openSqlCursor(cursorNumber, selectQuery)
-		returnString = await this.fetchSqlCursor(cursorNumber)
-		await this.closeSqlCursor(cursorNumber)
+		const cursorNumber = new Date().getTime().toString();
+		let returnString = await this.openSqlCursor(cursorNumber, selectQuery);
+		returnString = await this.fetchSqlCursor(cursorNumber);
+		await this.closeSqlCursor(cursorNumber);
 		return returnString;
 	}
 
 	private async openSqlCursor(cursorNumber: string, selectQuery: string) {
-		let openCursor = 'OPEN CURSOR ' + cursorNumber + ' AS ';
-		let rows = '';
-		let prepareString = utils.sqlObject(openCursor + selectQuery, rows)
-		let returnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
-		return returnString
+		const openCursor = "OPEN CURSOR " + cursorNumber + " AS ";
+		const prepareString = utils.sqlObject(openCursor + selectQuery, "");
+		return await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
 	}
 
 	private async fetchSqlCursor(cursorNumber: string) {
-		let fetchCursor = 'FETCH ' + cursorNumber;
-		let rows = 'ROWS=' + this.maxRow;
-		let prepareString = utils.sqlObject(fetchCursor, rows)
-		let returnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
-		let splitReturnSring: string[] = returnString.split(String.fromCharCode(0))
-		let totalCount = Number(splitReturnSring[0]);
-		returnString = splitReturnSring[1];
+		const fetchCursor = "FETCH " + cursorNumber;
+		const rows = "ROWS=" + this.maxRow;
+		const prepareString = utils.sqlObject(fetchCursor, rows);
+		
+		let returnString = await this.execute(
+			{ serviceClass: ServiceClass.SQL },
+			prepareString
+		);
+		
+		let splitReturnString: string[] = returnString.split(String.fromCharCode(0));
+		let totalCount = Number(splitReturnString[0]);
+		returnString = splitReturnString[1];
 		if (this.isSql === false) {
-			while ((totalCount < this.recordCount)) {
-				splitReturnSring = [];
-				let nextReturnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
-				splitReturnSring = nextReturnString.split(String.fromCharCode(0))
-				totalCount = totalCount + Number(splitReturnSring[0]);
-				returnString = returnString + '\r\n' + splitReturnSring[1]
+			while (totalCount < this.recordCount) {
+				splitReturnString = [];
+				
+				const nextReturnString = await this.execute(
+					{ serviceClass: ServiceClass.SQL },
+					prepareString
+				);
+				
+				splitReturnString = nextReturnString.split(String.fromCharCode(0));
+				totalCount = totalCount + Number(splitReturnString[0]);
+				returnString = returnString + "\r\n" + splitReturnString[1];
 			}
 		}
-		return returnString
+		return returnString;
 	}
 
 	private async closeSqlCursor(cursorNumber: string) {
-		let closeCursor = 'CLOSE ' + cursorNumber;
-		let prepareString = utils.sqlObject(closeCursor, '')
-		let returnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
-		return returnString
+		const closeCursor = "CLOSE " + cursorNumber;
+		const prepareString = utils.sqlObject(closeCursor, "");
+		return await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
 	}
 
 	private async _getPslClasses() {
-		let returnString: string;
-		let prepareString = utils.getPslCls()
-		returnString = await this.execute({ mrpcID: '121', serviceClass: ServiceClass.MRPC }, prepareString);
-		return returnString;
+		const prepareString = utils.getPslCls();
+		return await this.execute(
+			{ mrpcID: "121", serviceClass: ServiceClass.MRPC },
+			prepareString
+		);
 	}
 
 	private async execute(detail: ServiceDetail, prepareString: string): Promise<string> {
@@ -328,24 +382,40 @@ export class MtmConnection {
 			messageLength = messageLength + nextMessage.length;
 			message = Buffer.concat([message, nextMessage], messageLength);
 		}
-		return (utils.parseResponse(detail.serviceClass, message.slice(startByte, message.length), this.encoding));
+		return utils.parseResponse(
+			detail.serviceClass,
+			message.slice(startByte, message.length),
+			this.encoding
+		);
 	}
 
 	private prepareSendingMessage(detail: ServiceDetail, prepareString: string): string {
-		let tokenMessage = utils.tokenMessage(detail.serviceClass, this.token, this.messageId);
+		const tokenMessage = utils.tokenMessage(
+			detail.serviceClass,
+			this.token,
+			this.messageId
+		);
+		
 		if (detail.serviceClass === ServiceClass.MRPC) {
-			let version: number = 1;
-			prepareString = utils.mrpcMessage(detail.mrpcID, version.toString(), prepareString)
+			const version: number = 1;
+			prepareString = utils.mrpcMessage(
+				detail.mrpcID,
+				version.toString(),
+				prepareString
+			);
 		}
 		let sendingMessage = utils.sendingMessage(tokenMessage, prepareString);
-		sendingMessage = this.serverType + this.messageByte + sendingMessage
+		sendingMessage = this.serverType + this.messageByte + sendingMessage;
 		sendingMessage = utils.pack(sendingMessage.length + 2) + sendingMessage;
 		this.messageId++;
 		return sendingMessage;
 	}
 }
 
-function readFileAsync(file: string, options?: {encoding?: string, flag?: string}): Promise<Buffer | string> {
+function readFileAsync(
+	file: string,
+	options?: {encoding?: string, flag?: string}
+): Promise<Buffer | string> {
 	return new Promise((resolve, reject) => {
 		fs.readFile(file, {encoding: null, flag: options.flag}, (err, data) => {
 			if (err) {
