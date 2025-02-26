@@ -28,6 +28,7 @@
         "dist",
         "lib",
         "tmp",
+        "test",
         "build-package-json.js",
     ],
 }
