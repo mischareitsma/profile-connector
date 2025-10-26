@@ -2,8 +2,8 @@
     "compilerOptions": {
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "moduleResolution": "node",
-        "module": "ESNext",
+        "moduleResolution": "nodenext",
+        "module": "nodenext",
         "target": "ESNext",
         "lib": [
             "ESNext"
@@ -22,6 +22,7 @@
         "noImplicitOverride": true,
         "declaration": true,
         "noEmit": true,
+        "allowImportingTsExtensions": true
     },
     "exclude": [
         "node_modules",

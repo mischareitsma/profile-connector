@@ -1,5 +1,5 @@
-import HostSocket from "./hostSocket";
-import * as utils from "./utils";
+import HostSocket from "./hostSocket.ts";
+import * as utils from "./utils.ts";
 import * as fs from "fs";
 
 enum ServiceClass {
