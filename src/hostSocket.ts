@@ -1,4 +1,4 @@
-import {Socket} from "net";
+import {Socket} from "node:net";
 
 export default class HostSocket {
 	socket: Socket;

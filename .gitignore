@@ -22,3 +22,6 @@ lib/
 
 # MacOS stuff
 .DS_Store
+
+# Temp stuff
+tmp/

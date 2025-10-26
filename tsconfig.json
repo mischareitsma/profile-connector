@@ -21,6 +21,7 @@
         "noImplicitReturns": true,
         "noImplicitOverride": true,
         "declaration": true,
+        "noEmit": true,
     },
     "exclude": [
         "node_modules",
@@ -30,5 +31,6 @@
         "tmp",
         "test",
         "build-package-json.js",
+        "esbuild.cjs"
     ],
 }
