@@ -21,6 +21,5 @@ jobs:
         with:
           node-version: '21.x'
           cache: 'npm'
-      - run: npm install
-      - run: npm run compile
-      - run: npm run test
+      - run: npm ci
+      - run: npm run build
