@@ -1,3 +1,3 @@
-export * from "./mtm";
-export * from "./utils";
-export * from "./hostSocket";
+export * from "./mtm.ts";
+export * from "./utils.ts";
+export * from "./hostSocket.ts";
