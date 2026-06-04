@@ -258,7 +258,8 @@ export function pslRunObject(compilationToken: string): string {
 	return v2lvFormat(messageArray);
 }
 
-export function customRunObject(request: string, compilationToken: string, localFile: string): string {
+export function customRunObject(request: string, compilationToken: string,
+	localFile: string): string {
 	const messageArray = [
 		request,
 		"", compilationToken, localFile

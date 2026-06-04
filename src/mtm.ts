@@ -268,7 +268,8 @@ export class MtmConnection {
 		fileName: string
 	): Promise<string> {
 		const fileDetails = utils.getObjectType(fileName);
-		const prepareString = utils.customRunObject(request, codeToken, fileDetails.fileBaseName);
+		const prepareString = utils.customRunObject(request,
+			codeToken, fileDetails.fileBaseName);
 		return await this.execute(
 			{ mrpcID, serviceClass: ServiceClass.MRPC },
 			prepareString

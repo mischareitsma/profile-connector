@@ -10,12 +10,12 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout project'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: 'Setup node 21.1.x'
-        uses: actions/setup-node@v3
+      - name: 'Setup node 24.x'
+        uses: actions/setup-node@v5
         with:
-          node-version: 21.1.x
+          node-version: 24.x
           cache: npm
 
       - name: 'Clean install project'
