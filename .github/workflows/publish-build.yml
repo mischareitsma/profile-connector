@@ -8,20 +8,14 @@ on:
 jobs:
   publish-release:
     runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
-      - name: 'Checkout project'
-        uses: actions/checkout@v5
-
-      - name: 'Setup node 24.x'
-        uses: actions/setup-node@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 24.x
-          cache: npm
-
-      - name: 'Clean install project'
-        run: npm ci
-
-      - name: 'Publish release'
-        run: npm run release
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run release
