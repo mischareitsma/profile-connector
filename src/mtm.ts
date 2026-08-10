@@ -166,11 +166,10 @@ export class MtmConnection {
 		).toString(this.encoding);
 		
 		const fileContentLength: number = fileString.length;
-		const totalLoop: number = Math.ceil(fileContentLength / 1024);
+		const totalLoop: number = Math.ceil(fileContentLength / 16384);
 		let codeToken: string = "";
 		for (let i = 0; i < totalLoop; i++) {
-			// TODO: (Mischa Reitsma) This could be stretched a bit. Message can grow to max 1MB (prefeably a bit less), but 2048 bytes is nothing.
-			const partialString: string = fileString.slice(i * 1024, (i + 1) * 1024);
+			const partialString: string = fileString.slice(i * 16384, (i + 1) * 16384);
 			let withPipe: string = "";
 			for (const char of partialString) {
 				withPipe += char.charCodeAt(0) + "|";
